@@ -1,31 +1,36 @@
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
-import { prettyJSON } from 'hono/pretty-json';
+import { cors } from 'hono/cors';
 import { usersRouter } from './routes/users';
 import { accountsRouter } from './routes/accounts';
 import { paymentsRouter } from './routes/payments';
 import YAML from 'yamljs';
 import path from 'path';
 
+// Create the Hono app
 const app = new Hono();
 
-app.use('*', prettyJSON());
+// Enable CORS
+app.use('/*', cors());
 
-// Create API v1 group
-const api = new Hono().basePath('/api/v1');
+// Mount routers
+app.route('/api/v1/users', usersRouter);
+app.route('/api/v1/accounts', accountsRouter);
+app.route('/api/v1/payments', paymentsRouter);
 
-// API routes under /api/v1
-api.route('/users', usersRouter);
-api.route('/accounts', accountsRouter);
-api.route('/payments', paymentsRouter);
+// Swagger UI routes
+let swaggerDocument;
+try {
+  // Make sure the file exists at backend/openapi.yaml
+  swaggerDocument = YAML.load(path.join(__dirname, '../openapi.yaml'));
+} catch (err) {
+  console.error("Error loading openapi.yaml:", err);
+  swaggerDocument = {};
+}
 
-// Mount API routes
-app.route('', api);
+app.get('/api/v1/api-docs/swagger.json', (c) => c.json(swaggerDocument));
 
-// Swagger routes (outside API versioning)
-const swaggerDocument = YAML.load(path.join(__dirname, '../openapi.yaml'));
-app.get('/api-docs/swagger.json', (c) => c.json(swaggerDocument));
-app.get('/api-docs', async (c) => {
+app.get('/api/v1/api-docs', async (c) => {
   return c.html(`
     <!DOCTYPE html>
     <html lang="en">
@@ -41,7 +46,7 @@ app.get('/api-docs', async (c) => {
       <script>
         window.onload = () => {
           window.ui = SwaggerUIBundle({
-            url: '/api-docs/swagger.json',
+            url: '/api/v1/api-docs/swagger.json',
             dom_id: '#swagger-ui',
           });
         };
@@ -51,7 +56,17 @@ app.get('/api-docs', async (c) => {
   `);
 });
 
-serve(app, () => {
-  console.log('Server is running on http://localhost:3000');
-  console.log('API documentation available at http://localhost:3000/api-docs');
-});
+// If not generating the OpenAPI spec, start the server
+if (!process.env.GENERATE_OPENAPI) {
+  const port = 3000;
+  console.log(`Server is running on http://localhost:${port}/api/v1/`);
+  console.log(`API documentation available at http://localhost:${port}/api/v1/api-docs`);
+  
+  serve({
+    fetch: app.fetch,
+    port
+  });
+} else {
+  console.log("OpenAPI generation mode enabled.");
+  // If you need additional behavior for generation, add here.
+}

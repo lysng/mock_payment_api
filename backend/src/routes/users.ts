@@ -2,18 +2,22 @@ import { Hono } from 'hono';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../types';
 import db from '../db';
+import { generateDummyUser } from '../utils/ollama';
+import { z } from 'zod';
+import { schemas } from '../utils/openApiGenerator';
 
 const users = new Hono();
 
 // POST - Create a new user
 users.post('/', async (c) => {
-  const userData: User = await c.req.json();
+  const userData = await c.req.json();
+  const validatedData = schemas.userSchema.parse(userData);
   const userId = uuidv4();
 
   try {
     await db.createUser({
       userId,
-      ...userData
+      ...validatedData
     });
     return c.json({ 
       userId, 
@@ -105,6 +109,31 @@ users.get('/:userId/accounts', async (c) => {
     return c.json(accounts, 200);
   } catch (error) {
     return c.json({ error: 'Failed to retrieve user accounts' }, 500);
+  }
+});
+
+// Add this new endpoint before the export statement
+users.post('/generate', async (c) => {
+  try {
+    const dummyUser = await generateDummyUser();
+    const userId = uuidv4();
+    
+    await db.createUser({
+      userId,
+      ...dummyUser
+    });
+
+    return c.json({ 
+      userId,
+      ...dummyUser,
+      status: 'created'
+    }, 201);
+  } catch (error) {
+    console.error('Error in generate endpoint:', error);
+    return c.json({ 
+      error: 'Failed to generate and create user',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
   }
 });
 

@@ -1,436 +1,101 @@
 openapi: 3.0.0
 info:
-  title: Banking API
-  version: 1.0.0
-  description: API for managing banking users, accounts, and payments
-
+    title: 'Banking API'
+    version: 1.0.0
+    description: 'API for managing banking users, accounts, and payments'
 servers:
-  - url: /api/v1
-
+    -
+        url: /api/v1
 components:
-  schemas:
-    User:
-      type: object
-      properties:
-        userId:
-          type: string
-          format: uuid
-        firstName:
-          type: string
-        lastName:
-          type: string
-        email:
-          type: string
-          format: email
-        dateOfBirth:
-          type: string
-          format: date
-        address:
-          type: object
-          properties:
-            street:
-              type: string
-            city:
-              type: string
-            country:
-              type: string
-            postalCode:
-              type: string
-          required:
-            - street
-            - city
-            - country
-            - postalCode
-      required:
-        - firstName
-        - lastName
-        - email
-        - dateOfBirth
-        - address
-    
-    Account:
-      type: object
-      properties:
-        accountId:
-          type: string
-          format: uuid
-        accountNumber:
-          type: string
-        userId:
-          type: string
-          format: uuid
-        balance:
-          type: number
-          default: 0
-        status:
-          type: string
-          enum: [active, closed]
-          default: active
-        createdAt:
-          type: string
-          format: date-time
-      required:
-        - userId
-
-    Payment:
-      type: object
-      properties:
-        paymentId:
-          type: string
-          format: uuid
-        amount:
-          type: number
-        fromAccount:
-          type: string
-          format: uuid
-        toAccount:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [pending, completed, failed]
-          default: pending
-        transactionDate:
-          type: string
-          format: date-time
-      required:
-        - amount
-        - fromAccount
-        - toAccount
-
+    schemas:
+        User:
+            type: object
+            properties: {userId: {type: string, format: uuid}, firstName: {type: string}, lastName: {type: string}, email: {type: string, format: email}, dateOfBirth: {type: string}, address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}}
+            required: [firstName, lastName, email, dateOfBirth, address]
+        Account:
+            type: object
+            properties: {accountId: {type: string, format: uuid}, accountNumber: {type: string}, userId: {type: string, format: uuid}, balance: {type: number, default: 0}, status: {type: string, enum: [active, closed], default: active}, createdAt: {type: string}}
+            required: [accountId, accountNumber, userId, createdAt]
+        Payment:
+            type: object
+            properties: {paymentId: {type: string, format: uuid}, amount: {type: number}, fromAccount: {type: string, format: uuid}, toAccount: {type: string, format: uuid}, status: {type: string, enum: [pending, completed, failed], default: pending}, transactionDate: {type: string}}
+            required: [paymentId, amount, fromAccount, toAccount, transactionDate]
+    parameters: {}
 paths:
-  /users:
-    post:
-      summary: Create a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '201':
-          description: User created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  userId:
-                    type: string
-                    format: uuid
-                  status:
-                    type: string
-        '500':
-          description: Server error
-    
-    get:
-      summary: Get all users
-      responses:
-        '200':
-          description: List of users
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-        '500':
-          description: Server error
-
-  /users/{userId}:
-    parameters:
-      - name: userId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    
-    get:
-      summary: Get user by ID
-      responses:
-        '200':
-          description: User found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '404':
-          description: User not found
-        '500':
-          description: Server error
-    
-    put:
-      summary: Update user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: User updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-        '404':
-          description: User not found
-        '500':
-          description: Server error
-    
-    delete:
-      summary: Delete user
-      responses:
-        '200':
-          description: User deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-        '404':
-          description: User not found
-        '500':
-          description: Server error
-
-  /users/{userId}/payments:
-    parameters:
-      - name: userId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      summary: Get user's payments
-      responses:
-        '200':
-          description: List of user's payments
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Payment'
-        '500':
-          description: Server error
-
-  /users/{userId}/accounts:
-    parameters:
-      - name: userId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      summary: Get user's accounts
-      responses:
-        '200':
-          description: List of user's accounts
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Account'
-        '500':
-          description: Server error
-
-  /accounts:
-    post:
-      summary: Create new account
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Account'
-      responses:
-        '201':
-          description: Account created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  accountId:
-                    type: string
-                    format: uuid
-                  accountNumber:
-                    type: string
-                  status:
-                    type: string
-        '500':
-          description: Server error
-
-  /accounts/{accountId}:
-    parameters:
-      - name: accountId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    
-    get:
-      summary: Get account by ID
-      responses:
-        '200':
-          description: Account found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Account'
-        '404':
-          description: Account not found
-        '500':
-          description: Server error
-    
-    put:
-      summary: Update account
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Account'
-      responses:
-        '200':
-          description: Account updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-        '500':
-          description: Server error
-    
-    delete:
-      summary: Close account
-      responses:
-        '200':
-          description: Account closed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  closureDate:
-                    type: string
-                    format: date-time
-        '500':
-          description: Server error
-
-  /payments:
-    post:
-      summary: Create new payment
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Payment'
-      responses:
-        '201':
-          description: Payment created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  paymentId:
-                    type: string
-                    format: uuid
-                  status:
-                    type: string
-                  transactionDate:
-                    type: string
-                    format: date-time
-        '500':
-          description: Server error
-    
-    get:
-      summary: Get all payments
-      responses:
-        '200':
-          description: List of payments
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Payment'
-        '500':
-          description: Server error
-
-  /payments/{paymentId}:
-    parameters:
-      - name: paymentId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    
-    get:
-      summary: Get payment by ID
-      responses:
-        '200':
-          description: Payment found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Payment'
-        '404':
-          description: Payment not found
-        '500':
-          description: Server error
-    
-    put:
-      summary: Update payment
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Payment'
-      responses:
-        '200':
-          description: Payment updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '500':
-          description: Server error
-    
-    delete:
-      summary: Delete payment
-      responses:
-        '200':
-          description: Payment deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        '500':
-          description: Server error 
+    /users:
+        post:
+            description: 'Create a new user'
+            requestBody: {content: {application/json: {schema: {type: object, properties: {userId: {type: string, format: uuid}, firstName: {type: string}, lastName: {type: string}, email: {type: string, format: email}, dateOfBirth: {type: string}, address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}}, required: [firstName, lastName, email, dateOfBirth, address]}}}}
+            responses: {'201': {description: 'User created successfully', content: {application/json: {schema: {type: object, properties: {userId: {type: string, format: uuid}, status: {type: string}}, required: [userId, status]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+        get:
+            description: 'Retrieve all users'
+            responses: {'200': {description: 'List of users', content: {application/json: {schema: {type: array, items: {type: object, properties: {userId: {type: string, format: uuid}, firstName: {type: string}, lastName: {type: string}, email: {type: string, format: email}, dateOfBirth: {type: string}, address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}}, required: [firstName, lastName, email, dateOfBirth, address]}}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+    '/users/{userId}':
+        get:
+            description: 'Retrieve a single user by userId'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: userId, in: path}]
+            responses: {'200': {description: 'User found', content: {application/json: {schema: {type: object, properties: {userId: {type: string, format: uuid}, firstName: {type: string}, lastName: {type: string}, email: {type: string, format: email}, dateOfBirth: {type: string}, address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}}, required: [firstName, lastName, email, dateOfBirth, address]}}}}, '404': {description: 'User not found', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+        put:
+            description: 'Update a user by userId'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: userId, in: path}]
+            requestBody: {content: {application/json: {schema: {type: object, properties: {userId: {type: string, format: uuid}, firstName: {type: string}, lastName: {type: string}, email: {type: string, format: email}, dateOfBirth: {type: string}, address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}}}}}}
+            responses: {'200': {description: 'User updated', content: {application/json: {schema: {type: object, properties: {status: {type: string}}, required: [status]}}}}, '404': {description: 'User not found', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+        delete:
+            description: 'Remove a user by userId'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: userId, in: path}]
+            responses: {'200': {description: 'User deleted', content: {application/json: {schema: {type: object, properties: {status: {type: string}}, required: [status]}}}}, '404': {description: 'User not found', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+    '/users/{userId}/payments':
+        get:
+            description: 'Get user''s payments'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: userId, in: path}]
+            responses: {'200': {description: 'List of user''s payments', content: {application/json: {schema: {type: array, items: {type: object, properties: {paymentId: {type: string, format: uuid}, amount: {type: number}, fromAccount: {type: string, format: uuid}, toAccount: {type: string, format: uuid}, status: {type: string, enum: [pending, completed, failed], default: pending}, transactionDate: {type: string}}, required: [paymentId, amount, fromAccount, toAccount, transactionDate]}}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+    '/users/{userId}/accounts':
+        get:
+            description: 'Get user''s accounts'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: userId, in: path}]
+            responses: {'200': {description: 'List of user''s accounts', content: {application/json: {schema: {type: array, items: {type: object, properties: {accountId: {type: string, format: uuid}, accountNumber: {type: string}, userId: {type: string, format: uuid}, balance: {type: number, default: 0}, status: {type: string, enum: [active, closed], default: active}, createdAt: {type: string}}, required: [accountId, accountNumber, userId, createdAt]}}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+    /users/generate:
+        post:
+            description: 'Generate and create a new user with dummy data'
+            responses: {'201': {description: 'Dummy user created successfully', content: {application/json: {schema: {type: object, properties: {userId: {type: string, format: uuid}, firstName: {type: string}, lastName: {type: string}, email: {type: string, format: email}, dateOfBirth: {type: string}, address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}, status: {type: string, enum: [created]}}, required: [firstName, lastName, email, dateOfBirth, address, status]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}, details: {type: string}}, required: [error, details]}}}}}
+    /accounts:
+        post:
+            description: 'Create new account'
+            requestBody: {content: {application/json: {schema: {type: object, properties: {userId: {type: string, format: uuid}, balance: {type: number, default: 0}}, required: [userId]}}}}
+            responses: {'201': {description: 'Account created', content: {application/json: {schema: {type: object, properties: {accountId: {type: string, format: uuid}, accountNumber: {type: string}, status: {type: string}}, required: [accountId, accountNumber, status]}}}}, '404': {description: 'User not found', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+    '/accounts/{accountId}':
+        get:
+            description: 'Get account by ID'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: accountId, in: path}]
+            responses: {'200': {description: 'Account found', content: {application/json: {schema: {type: object, properties: {accountId: {type: string, format: uuid}, accountNumber: {type: string}, userId: {type: string, format: uuid}, balance: {type: number, default: 0}, status: {type: string, enum: [active, closed], default: active}, createdAt: {type: string}}, required: [accountId, accountNumber, userId, createdAt]}}}}, '404': {description: 'Account not found', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+        put:
+            description: 'Update account'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: accountId, in: path}]
+            requestBody: {content: {application/json: {schema: {type: object, properties: {accountId: {type: string, format: uuid}, accountNumber: {type: string}, userId: {type: string, format: uuid}, balance: {type: number, default: 0}, status: {type: string, enum: [active, closed], default: active}, createdAt: {type: string}}}}}}
+            responses: {'200': {description: 'Account updated', content: {application/json: {schema: {type: object, properties: {status: {type: string}}, required: [status]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+        delete:
+            description: 'Close account'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: accountId, in: path}]
+            responses: {'200': {description: 'Account closed', content: {application/json: {schema: {type: object, properties: {status: {type: string, enum: [closed]}, closureDate: {type: string}}, required: [status, closureDate]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+    /payments:
+        post:
+            description: 'Create new payment'
+            requestBody: {content: {application/json: {schema: {type: object, properties: {amount: {type: number}, fromAccount: {type: string, format: uuid}, toAccount: {type: string, format: uuid}, status: {type: string, enum: [pending, completed, failed], default: pending}, transactionDate: {type: string}}, required: [amount, fromAccount, toAccount, transactionDate]}}}}
+            responses: {'201': {description: 'Payment created', content: {application/json: {schema: {type: object, properties: {paymentId: {type: string, format: uuid}, status: {type: string}, transactionDate: {type: string}}, required: [paymentId, status, transactionDate]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+        get:
+            description: 'Get all payments'
+            responses: {'200': {description: 'List of payments', content: {application/json: {schema: {type: array, items: {type: object, properties: {paymentId: {type: string, format: uuid}, amount: {type: number}, fromAccount: {type: string, format: uuid}, toAccount: {type: string, format: uuid}, status: {type: string, enum: [pending, completed, failed], default: pending}, transactionDate: {type: string}}, required: [paymentId, amount, fromAccount, toAccount, transactionDate]}}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+    '/payments/{paymentId}':
+        get:
+            description: 'Get payment by ID'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: paymentId, in: path}]
+            responses: {'200': {description: 'Payment found', content: {application/json: {schema: {type: object, properties: {paymentId: {type: string, format: uuid}, amount: {type: number}, fromAccount: {type: string, format: uuid}, toAccount: {type: string, format: uuid}, status: {type: string, enum: [pending, completed, failed], default: pending}, transactionDate: {type: string}}, required: [paymentId, amount, fromAccount, toAccount, transactionDate]}}}}, '404': {description: 'Payment not found', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+        put:
+            description: 'Update payment'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: paymentId, in: path}]
+            requestBody: {content: {application/json: {schema: {type: object, properties: {paymentId: {type: string, format: uuid}, amount: {type: number}, fromAccount: {type: string, format: uuid}, toAccount: {type: string, format: uuid}, status: {type: string, enum: [pending, completed, failed], default: pending}, transactionDate: {type: string}}}}}}
+            responses: {'200': {description: 'Payment updated', content: {application/json: {schema: {type: object, properties: {message: {type: string}}, required: [message]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
+        delete:
+            description: 'Delete payment'
+            parameters: [{schema: {type: string, format: uuid}, required: true, name: paymentId, in: path}]
+            responses: {'200': {description: 'Payment deleted', content: {application/json: {schema: {type: object, properties: {message: {type: string}}, required: [message]}}}}, '500': {description: 'Server error', content: {application/json: {schema: {type: object, properties: {error: {type: string}}, required: [error]}}}}}
