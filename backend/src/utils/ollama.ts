@@ -14,6 +14,7 @@ export async function generateDummyUser(): Promise<User> {
       - country (string)
       - postalCode (string)
     Make sure the email is properly formatted and the date is a valid date.
+    Make sure the names are not just always john doe or jane smith, make these names unique and realistic.
     Return only the JSON object, no additional text.`;
 
   try {
