@@ -1,0 +1,191 @@
+openapi: 3.0.0
+info:
+  title: Payments API
+  version: 1.0.0
+  description: API for managing payments, users, accounts and transfers
+
+paths:
+  /users:
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                dateOfBirth:
+                  type: string
+                  format: date
+                address:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    country:
+                      type: string
+                    postalCode:
+                      type: string
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  status:
+                    type: string
+
+  /accounts:
+    post:
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                accountType:
+                  type: string
+                  enum: [CHECKING, SAVINGS, CREDIT]
+                currency:
+                  type: string
+                  enum: [USD, EUR, GBP]
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId:
+                    type: string
+                  accountNumber:
+                    type: string
+                  status:
+                    type: string
+
+    delete:
+      summary: Close an account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account closed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  closureDate:
+                    type: string
+                    format: date-time
+
+  /payments:
+    post:
+      summary: Make a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceAccountId:
+                  type: string
+                destinationAccountId:
+                  type: string
+                amount:
+                  type: number
+                  format: double
+                currency:
+                  type: string
+                  enum: [USD, EUR, GBP]
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paymentId:
+                    type: string
+                  status:
+                    type: string
+                  transactionDate:
+                    type: string
+                    format: date-time
+
+  /transfers:
+    post:
+      summary: Transfer funds between accounts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceAccountId:
+                  type: string
+                destinationAccountId:
+                  type: string
+                amount:
+                  type: number
+                  format: double
+                currency:
+                  type: string
+                  enum: [USD, EUR, GBP]
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Transfer completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transferId:
+                    type: string
+                  status:
+                    type: string
+                  transactionDate:
+                    type: string
+                    format: date-time
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
