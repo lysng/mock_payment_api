@@ -707,9 +707,24 @@ export function generateOpenApiSpec() {
     servers: [{ url: '/api/v1' }],
   });
 
-  // Write as YAML instead of JSON
+  // Format the spec in a more readable way
+  const formattedSpec = {
+    openapi: spec.openapi,
+    info: spec.info,
+    servers: spec.servers,
+    components: {
+      schemas: spec.components?.schemas || {},
+      parameters: spec.components?.parameters || {},
+    },
+    paths: Object.entries(spec.paths || {}).reduce((acc, [path, methods]) => ({
+      ...acc,
+      [path]: methods
+    }), {})
+  };
+
+  // Write as YAML with proper formatting
   const outputPath = path.join(__dirname, '../../openapi.yaml');
-  const yamlString = YAML.stringify(spec, 4);
+  const yamlString = YAML.stringify(formattedSpec, 10, 2);  // 10 spaces indent, 2 line breaks
   fs.writeFileSync(outputPath, yamlString);
   console.log(`OpenAPI spec generated at: ${outputPath}`);
 }
