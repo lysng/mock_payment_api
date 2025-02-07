@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: 'Banking API'
   version: 1.0.0
@@ -14,32 +14,42 @@ components:
         userId:
           type: string
           format: uuid
+          description: 'Unique user identifier'
         firstName:
           type: string
+          description: 'User''s first name'
         lastName:
           type: string
+          description: 'User''s last name'
         email:
           type: string
           format: email
+          description: 'User''s email address'
         dateOfBirth:
           type: string
+          description: 'User''s date of birth'
         address:
           type: object
           properties:
             street:
               type: string
+              description: 'Street address'
             city:
               type: string
+              description: 'City name'
             country:
               type: string
+              description: 'Country name'
             postalCode:
               type: string
+              description: 'Postal code'
           required:
             - street
             - city
             - country
             - postalCode
       required:
+        - userId
         - firstName
         - lastName
         - email
@@ -51,26 +61,33 @@ components:
         accountId:
           type: string
           format: uuid
+          description: 'Unique account identifier'
         accountNumber:
           type: string
+          description: 'Account number'
         userId:
           type: string
           format: uuid
+          description: 'Owner''s user ID'
         balance:
           type: number
-          default: 0
+          description: 'Current balance'
         status:
           type: string
           enum:
             - active
+            - inactive
             - closed
-          default: active
+          description: 'Account status'
         createdAt:
           type: string
+          description: 'Account creation timestamp'
       required:
         - accountId
         - accountNumber
         - userId
+        - balance
+        - status
         - createdAt
     Payment:
       type: object
@@ -78,28 +95,34 @@ components:
         paymentId:
           type: string
           format: uuid
+          description: 'Unique payment identifier'
         amount:
           type: number
+          description: 'Payment amount'
         fromAccount:
           type: string
           format: uuid
+          description: 'Source account ID'
         toAccount:
           type: string
           format: uuid
+          description: 'Destination account ID'
         status:
           type: string
           enum:
             - pending
             - completed
             - failed
-          default: pending
+          description: 'Payment status'
         transactionDate:
           type: string
+          description: 'Transaction timestamp'
       required:
         - paymentId
         - amount
         - fromAccount
         - toAccount
+        - status
         - transactionDate
   parameters: {}
 paths:
@@ -112,21 +135,22 @@ paths:
             schema:
               type: object
               properties:
-                userId:
-                  type: string
-                  format: uuid
                 firstName:
                   type: string
+                  description: 'User''s first name'
                 lastName:
                   type: string
+                  description: 'User''s last name'
                 email:
                   type: string
                   format: email
+                  description: 'User''s email address'
                 dateOfBirth:
                   type: string
+                  description: 'User''s date of birth'
                 address:
                   type: object
-                  properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}
+                  properties: {street: {type: string, description: 'Street address'}, city: {type: string, description: 'City name'}, country: {type: string, description: 'Country name'}, postalCode: {type: string, description: 'Postal code'}}
                   required: [street, city, country, postalCode]
               required:
                 - firstName
@@ -142,23 +166,11 @@ paths:
               schema:
                 type: object
                 properties:
-                  userId: {type: string, format: uuid}
-                  status: {type: string}
+                  userId: {type: string}
                 required:
                   - userId
-                  - status
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
     get:
-      description: 'Retrieve all users'
+      description: 'Get all users'
       responses:
         '200':
           description: 'List of users'
@@ -168,21 +180,11 @@ paths:
                 type: array
                 items:
                   type: object
-                  properties: {userId: {type: string, format: uuid}, firstName: {type: string}, lastName: {type: string}, email: {type: string, format: email}, dateOfBirth: {type: string}, address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}}
-                  required: [firstName, lastName, email, dateOfBirth, address]
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
+                  properties: {userId: {type: string, format: uuid, description: 'Unique user identifier'}, firstName: {type: string, description: 'User''s first name'}, lastName: {type: string, description: 'User''s last name'}, email: {type: string, format: email, description: 'User''s email address'}, dateOfBirth: {type: string, description: 'User''s date of birth'}, address: {type: object, properties: {street: {type: string, description: 'Street address'}, city: {type: string, description: 'City name'}, country: {type: string, description: 'Country name'}, postalCode: {type: string, description: 'Postal code'}}, required: [street, city, country, postalCode]}}
+                  required: [userId, firstName, lastName, email, dateOfBirth, address]
   '/users/{userId}':
     get:
-      description: 'Retrieve a single user by userId'
+      description: 'Get user by ID'
       parameters:
         -
           schema:
@@ -199,40 +201,21 @@ paths:
               schema:
                 type: object
                 properties:
-                  userId: {type: string, format: uuid}
-                  firstName: {type: string}
-                  lastName: {type: string}
-                  email: {type: string, format: email}
-                  dateOfBirth: {type: string}
-                  address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}
+                  userId: {type: string, format: uuid, description: 'Unique user identifier'}
+                  firstName: {type: string, description: 'User''s first name'}
+                  lastName: {type: string, description: 'User''s last name'}
+                  email: {type: string, format: email, description: 'User''s email address'}
+                  dateOfBirth: {type: string, description: 'User''s date of birth'}
+                  address: {type: object, properties: {street: {type: string, description: 'Street address'}, city: {type: string, description: 'City name'}, country: {type: string, description: 'Country name'}, postalCode: {type: string, description: 'Postal code'}}, required: [street, city, country, postalCode]}
                 required:
+                  - userId
                   - firstName
                   - lastName
                   - email
                   - dateOfBirth
                   - address
-        '404':
-          description: 'User not found'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
     put:
-      description: 'Update a user by userId'
+      description: 'Update user details'
       parameters:
         -
           schema:
@@ -247,55 +230,36 @@ paths:
             schema:
               type: object
               properties:
-                userId:
-                  type: string
-                  format: uuid
                 firstName:
                   type: string
+                  description: 'User''s first name'
                 lastName:
                   type: string
+                  description: 'User''s last name'
                 email:
                   type: string
                   format: email
+                  description: 'User''s email address'
                 dateOfBirth:
                   type: string
+                  description: 'User''s date of birth'
                 address:
                   type: object
-                  properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}
+                  properties: {street: {type: string, description: 'Street address'}, city: {type: string, description: 'City name'}, country: {type: string, description: 'Country name'}, postalCode: {type: string, description: 'Postal code'}}
                   required: [street, city, country, postalCode]
       responses:
         '200':
-          description: 'User updated'
+          description: 'User updated successfully'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status: {type: string}
+                  status: {type: string, enum: [updated]}
                 required:
                   - status
-        '404':
-          description: 'User not found'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
     delete:
-      description: 'Remove a user by userId'
+      description: 'Delete user'
       parameters:
         -
           schema:
@@ -306,38 +270,18 @@ paths:
           in: path
       responses:
         '200':
-          description: 'User deleted'
+          description: 'User deleted successfully'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status: {type: string}
+                  status: {type: string, enum: [deleted]}
                 required:
                   - status
-        '404':
-          description: 'User not found'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
   '/users/{userId}/payments':
     get:
-      description: 'Get user''s payments'
+      description: 'Get user''s payment history'
       parameters:
         -
           schema:
@@ -355,18 +299,8 @@ paths:
                 type: array
                 items:
                   type: object
-                  properties: {paymentId: {type: string, format: uuid}, amount: {type: number}, fromAccount: {type: string, format: uuid}, toAccount: {type: string, format: uuid}, status: {type: string, enum: [pending, completed, failed], default: pending}, transactionDate: {type: string}}
-                  required: [paymentId, amount, fromAccount, toAccount, transactionDate]
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
+                  properties: {paymentId: {type: string, format: uuid, description: 'Unique payment identifier'}, amount: {type: number, description: 'Payment amount'}, fromAccount: {type: string, format: uuid, description: 'Source account ID'}, toAccount: {type: string, format: uuid, description: 'Destination account ID'}, status: {type: string, enum: [pending, completed, failed], description: 'Payment status'}, transactionDate: {type: string, description: 'Transaction timestamp'}}
+                  required: [paymentId, amount, fromAccount, toAccount, status, transactionDate]
   '/users/{userId}/accounts':
     get:
       description: 'Get user''s accounts'
@@ -387,21 +321,11 @@ paths:
                 type: array
                 items:
                   type: object
-                  properties: {accountId: {type: string, format: uuid}, accountNumber: {type: string}, userId: {type: string, format: uuid}, balance: {type: number, default: 0}, status: {type: string, enum: [active, closed], default: active}, createdAt: {type: string}}
-                  required: [accountId, accountNumber, userId, createdAt]
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
+                  properties: {accountId: {type: string, format: uuid, description: 'Unique account identifier'}, accountNumber: {type: string, description: 'Account number'}, userId: {type: string, format: uuid, description: 'Owner''s user ID'}, balance: {type: number, description: 'Current balance'}, status: {type: string, enum: [active, inactive, closed], description: 'Account status'}, createdAt: {type: string, description: 'Account creation timestamp'}}
+                  required: [accountId, accountNumber, userId, balance, status, createdAt]
   /users/generate:
     post:
-      description: 'Generate and create a new user with dummy data'
+      description: 'Generate dummy user data'
       responses:
         '201':
           description: 'Dummy user created successfully'
@@ -410,35 +334,24 @@ paths:
               schema:
                 type: object
                 properties:
-                  userId: {type: string, format: uuid}
-                  firstName: {type: string}
-                  lastName: {type: string}
-                  email: {type: string, format: email}
-                  dateOfBirth: {type: string}
-                  address: {type: object, properties: {street: {type: string}, city: {type: string}, country: {type: string}, postalCode: {type: string}}, required: [street, city, country, postalCode]}
+                  userId: {type: string, format: uuid, description: 'Unique user identifier'}
+                  firstName: {type: string, description: 'User''s first name'}
+                  lastName: {type: string, description: 'User''s last name'}
+                  email: {type: string, format: email, description: 'User''s email address'}
+                  dateOfBirth: {type: string, description: 'User''s date of birth'}
+                  address: {type: object, properties: {street: {type: string, description: 'Street address'}, city: {type: string, description: 'City name'}, country: {type: string, description: 'Country name'}, postalCode: {type: string, description: 'Postal code'}}, required: [street, city, country, postalCode]}
                   status: {type: string, enum: [created]}
                 required:
+                  - userId
                   - firstName
                   - lastName
                   - email
                   - dateOfBirth
                   - address
                   - status
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                  details: {type: string}
-                required:
-                  - error
-                  - details
   /accounts:
     post:
-      description: 'Create new account'
+      description: 'Create a new account'
       requestBody:
         content:
           application/json:
@@ -450,44 +363,29 @@ paths:
                   format: uuid
                 balance:
                   type: number
-                  default: 0
               required:
                 - userId
       responses:
         '201':
-          description: 'Account created'
+          description: 'Account created successfully'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  accountId: {type: string, format: uuid}
-                  accountNumber: {type: string}
-                  status: {type: string}
+                  accountId: {type: string, format: uuid, description: 'Unique account identifier'}
+                  accountNumber: {type: string, description: 'Account number'}
+                  userId: {type: string, format: uuid, description: 'Owner''s user ID'}
+                  balance: {type: number, description: 'Current balance'}
+                  status: {type: string, enum: [active, inactive, closed], description: 'Account status'}
+                  createdAt: {type: string, description: 'Account creation timestamp'}
                 required:
                   - accountId
                   - accountNumber
+                  - userId
+                  - balance
                   - status
-        '404':
-          description: 'User not found'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
+                  - createdAt
   '/accounts/{accountId}':
     get:
       description: 'Get account by ID'
@@ -507,39 +405,21 @@ paths:
               schema:
                 type: object
                 properties:
-                  accountId: {type: string, format: uuid}
-                  accountNumber: {type: string}
-                  userId: {type: string, format: uuid}
-                  balance: {type: number, default: 0}
-                  status: {type: string, enum: [active, closed], default: active}
-                  createdAt: {type: string}
+                  accountId: {type: string, format: uuid, description: 'Unique account identifier'}
+                  accountNumber: {type: string, description: 'Account number'}
+                  userId: {type: string, format: uuid, description: 'Owner''s user ID'}
+                  balance: {type: number, description: 'Current balance'}
+                  status: {type: string, enum: [active, inactive, closed], description: 'Account status'}
+                  createdAt: {type: string, description: 'Account creation timestamp'}
                 required:
                   - accountId
                   - accountNumber
                   - userId
+                  - balance
+                  - status
                   - createdAt
-        '404':
-          description: 'Account not found'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
     put:
-      description: 'Update account'
+      description: 'Update account details'
       parameters:
         -
           schema:
@@ -554,44 +434,24 @@ paths:
             schema:
               type: object
               properties:
-                accountId:
-                  type: string
-                  format: uuid
-                accountNumber:
-                  type: string
-                userId:
-                  type: string
-                  format: uuid
-                balance:
-                  type: number
-                  default: 0
                 status:
                   type: string
-                  enum: [active, closed]
-                  default: active
-                createdAt:
-                  type: string
+                  enum: [active, inactive, closed]
+              required:
+                - status
       responses:
         '200':
-          description: 'Account updated'
+          description: 'Account updated successfully'
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   status: {type: string}
+                  message: {type: string}
                 required:
                   - status
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
+                  - message
     delete:
       description: 'Close account'
       parameters:
@@ -604,30 +464,42 @@ paths:
           in: path
       responses:
         '200':
-          description: 'Account closed'
+          description: 'Account closed successfully'
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   status: {type: string, enum: [closed]}
-                  closureDate: {type: string}
+                  message: {type: string}
                 required:
                   - status
-                  - closureDate
-        '500':
-          description: 'Server error'
+                  - message
+  '/accounts/user/{userId}':
+    get:
+      description: 'Get user''s accounts'
+      parameters:
+        -
+          schema:
+            type: string
+            format: uuid
+          required: true
+          name: userId
+          in: path
+      responses:
+        '200':
+          description: 'List of user''s accounts'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
+                type: array
+                items:
+                  type: object
+                  properties: {accountId: {type: string, format: uuid, description: 'Unique account identifier'}, accountNumber: {type: string, description: 'Account number'}, userId: {type: string, format: uuid, description: 'Owner''s user ID'}, balance: {type: number, description: 'Current balance'}, status: {type: string, enum: [active, inactive, closed], description: 'Account status'}, createdAt: {type: string, description: 'Account creation timestamp'}}
+                  required: [accountId, accountNumber, userId, balance, status, createdAt]
   /payments:
     post:
-      description: 'Create new payment'
+      description: 'Create a new payment'
       requestBody:
         content:
           application/json:
@@ -642,10 +514,6 @@ paths:
                 toAccount:
                   type: string
                   format: uuid
-                status:
-                  type: string
-                  enum: [pending, completed, failed]
-                  default: pending
                 transactionDate:
                   type: string
               required:
@@ -655,29 +523,25 @@ paths:
                 - transactionDate
       responses:
         '201':
-          description: 'Payment created'
+          description: 'Payment created successfully'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  paymentId: {type: string, format: uuid}
-                  status: {type: string}
-                  transactionDate: {type: string}
+                  paymentId: {type: string, format: uuid, description: 'Unique payment identifier'}
+                  amount: {type: number, description: 'Payment amount'}
+                  fromAccount: {type: string, format: uuid, description: 'Source account ID'}
+                  toAccount: {type: string, format: uuid, description: 'Destination account ID'}
+                  status: {type: string, enum: [pending, completed, failed], description: 'Payment status'}
+                  transactionDate: {type: string, description: 'Transaction timestamp'}
                 required:
                   - paymentId
+                  - amount
+                  - fromAccount
+                  - toAccount
                   - status
                   - transactionDate
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
     get:
       description: 'Get all payments'
       responses:
@@ -689,18 +553,8 @@ paths:
                 type: array
                 items:
                   type: object
-                  properties: {paymentId: {type: string, format: uuid}, amount: {type: number}, fromAccount: {type: string, format: uuid}, toAccount: {type: string, format: uuid}, status: {type: string, enum: [pending, completed, failed], default: pending}, transactionDate: {type: string}}
-                  required: [paymentId, amount, fromAccount, toAccount, transactionDate]
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
+                  properties: {paymentId: {type: string, format: uuid, description: 'Unique payment identifier'}, amount: {type: number, description: 'Payment amount'}, fromAccount: {type: string, format: uuid, description: 'Source account ID'}, toAccount: {type: string, format: uuid, description: 'Destination account ID'}, status: {type: string, enum: [pending, completed, failed], description: 'Payment status'}, transactionDate: {type: string, description: 'Transaction timestamp'}}
+                  required: [paymentId, amount, fromAccount, toAccount, status, transactionDate]
   '/payments/{paymentId}':
     get:
       description: 'Get payment by ID'
@@ -720,40 +574,21 @@ paths:
               schema:
                 type: object
                 properties:
-                  paymentId: {type: string, format: uuid}
-                  amount: {type: number}
-                  fromAccount: {type: string, format: uuid}
-                  toAccount: {type: string, format: uuid}
-                  status: {type: string, enum: [pending, completed, failed], default: pending}
-                  transactionDate: {type: string}
+                  paymentId: {type: string, format: uuid, description: 'Unique payment identifier'}
+                  amount: {type: number, description: 'Payment amount'}
+                  fromAccount: {type: string, format: uuid, description: 'Source account ID'}
+                  toAccount: {type: string, format: uuid, description: 'Destination account ID'}
+                  status: {type: string, enum: [pending, completed, failed], description: 'Payment status'}
+                  transactionDate: {type: string, description: 'Transaction timestamp'}
                 required:
                   - paymentId
                   - amount
                   - fromAccount
                   - toAccount
+                  - status
                   - transactionDate
-        '404':
-          description: 'Payment not found'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
     put:
-      description: 'Update payment'
+      description: 'Update payment details'
       parameters:
         -
           schema:
@@ -768,26 +603,27 @@ paths:
             schema:
               type: object
               properties:
-                paymentId:
-                  type: string
-                  format: uuid
                 amount:
                   type: number
+                  description: 'Payment amount'
                 fromAccount:
                   type: string
                   format: uuid
+                  description: 'Source account ID'
                 toAccount:
                   type: string
                   format: uuid
+                  description: 'Destination account ID'
                 status:
                   type: string
                   enum: [pending, completed, failed]
-                  default: pending
+                  description: 'Payment status'
                 transactionDate:
                   type: string
+                  description: 'Transaction timestamp'
       responses:
         '200':
-          description: 'Payment updated'
+          description: 'Payment updated successfully'
           content:
             application/json:
               schema:
@@ -796,16 +632,6 @@ paths:
                   message: {type: string}
                 required:
                   - message
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error
     delete:
       description: 'Delete payment'
       parameters:
@@ -818,7 +644,7 @@ paths:
           in: path
       responses:
         '200':
-          description: 'Payment deleted'
+          description: 'Payment deleted successfully'
           content:
             application/json:
               schema:
@@ -827,13 +653,3 @@ paths:
                   message: {type: string}
                 required:
                   - message
-        '500':
-          description: 'Server error'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: {type: string}
-                required:
-                  - error

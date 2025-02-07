@@ -16,8 +16,8 @@ users.post('/', async (c) => {
 
   try {
     await db.createUser({
+      ...validatedData,
       userId,
-      ...validatedData
     });
     return c.json({ 
       userId, 
