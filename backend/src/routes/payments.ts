@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { Payment } from '../types';
 import db from '../db';
@@ -6,21 +7,34 @@ import db from '../db';
 const payments = new Hono();
 
 payments.post('/', async (c) => {
-  const paymentData: Payment = await c.req.json();
-  const paymentId = uuidv4();
-
   try {
-    await db.createPayment({
-      ...paymentData,
-      paymentId,
-    });
-    return c.json({ 
+    const { amount, fromAccount, toAccount } = await c.req.json();
+    
+    // Check account and balance
+    const fromAccountData = await db.get('SELECT balance FROM accounts WHERE accountId = ? AND status = "active"', [fromAccount]);
+    if (!fromAccountData) throw new Error('Source account not found or inactive');
+    if (fromAccountData.balance < amount) throw new Error('Insufficient funds');
+
+    // Update balances
+    await db.run('UPDATE accounts SET balance = balance - ? WHERE accountId = ?', [amount, fromAccount]);
+    await db.run('UPDATE accounts SET balance = balance + ? WHERE accountId = ?', [amount, toAccount]);
+
+    // Create payment record
+    const paymentId = uuidv4();
+    await db.run(
+      'INSERT INTO payments (paymentId, amount, fromAccount, toAccount, status, transactionDate) VALUES (?, ?, ?, ?, ?, ?)',
+      [paymentId, amount, fromAccount, toAccount, 'completed', new Date().toISOString()]
+    );
+
+    return c.json({
       paymentId,
       status: 'completed',
       transactionDate: new Date().toISOString()
     }, 201);
+
   } catch (error) {
-    return c.json({ error: 'Failed to process payment' }, 500);
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    return c.json({ error: message }, 500);
   }
 });
 

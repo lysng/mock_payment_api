@@ -1,13 +1,22 @@
 import sqlite3 from 'sqlite3';
 import { Database } from 'sqlite3';
 import { Payment, User, Account } from './types';
+import { promisify } from 'util';
 
 class DB {
   private db: Database;
+  public get: (sql: string, params: any[]) => Promise<any>;
+  public run: (sql: string, params: any[]) => Promise<any>;
+  public all: (sql: string, params: any[]) => Promise<any[]>;
 
   constructor() {
     this.db = new sqlite3.Database('payments.db');
     this.init().catch(console.error);
+
+    // Promisify SQLite methods
+    this.get = promisify(this.db.get.bind(this.db));
+    this.run = promisify(this.db.run.bind(this.db));
+    this.all = promisify(this.db.all.bind(this.db));
   }
 
   private async init() {
@@ -325,8 +334,8 @@ class DB {
     };
   }
 
-  private createTables(): Promise<void> {
-    return new Promise((resolve, reject) => {
+  private async createTables(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
       this.db.serialize(() => {
         // Users table
         this.db.run(`
@@ -347,14 +356,17 @@ class DB {
         this.db.run(`
           CREATE TABLE IF NOT EXISTS accounts (
             accountId TEXT PRIMARY KEY,
-            accountNumber TEXT UNIQUE NOT NULL,
-            userId TEXT NOT NULL,
+            accountNumber TEXT UNIQUE,
+            userId TEXT,
             balance REAL DEFAULT 0,
-            status TEXT DEFAULT 'active' CHECK(status IN ('active', 'closed')),
-            createdAt TEXT NOT NULL,
+            status TEXT DEFAULT 'active',
+            createdAt TEXT,
             FOREIGN KEY(userId) REFERENCES users(userId)
           )
-        `);
+        `, (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
 
         // Payments table
         this.db.run(`

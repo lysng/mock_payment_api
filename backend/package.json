@@ -9,11 +9,17 @@
     "dev": "ts-node src/index.ts",
     "swagger": "ts-node src/swagger.ts",
     "generate-openapi": "ts-node src/utils/openApiGenerator.ts",
-    "validate-openapi": "npm run generate-openapi && ts-node src/utils/validateOpenApi.ts"
+    "validate-openapi": "npm run generate-openapi && ts-node src/utils/validateOpenApi.ts",
+    "test:transaction": "ts-node src/tests/transaction.test.ts",
+    "test:users": "ts-node src/tests/users.test.ts",
+    "test:accounts": "ts-node src/tests/accounts.test.ts",
+    "test:payments": "ts-node src/tests/payments.test.ts",
+    "test:all": "ts-node src/tests/run-all.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.0",
     "@hono/node-server": "^1.13.8",
+    "chalk": "^5.4.1",
     "cors": "^2.8.5",
     "hono": "^4.0.0",
     "sqlite3": "^5.1.6",

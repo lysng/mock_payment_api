@@ -2,7 +2,7 @@ import { User } from '../types';
 
 const OLLAMA_BASE_URL = 'http://localhost:11434/api';
 
-export async function generateDummyUser(): Promise<User> {
+export async function generateDummyUser(role: 'sender' | 'receiver' = 'sender'): Promise<User> {
   const prompt = `Generate a realistic dummy user data in JSON format with the following fields:
     - firstName (string)
     - lastName (string)
@@ -13,11 +13,19 @@ export async function generateDummyUser(): Promise<User> {
       - city (string)
       - country (string)
       - postalCode (string)
-    Make sure the email is properly formatted and the date is a valid date.
-    Make sure the names are not just always john doe or jane smith, make these names unique and realistic.
+    
+    Requirements:
+    - Make sure the email is properly formatted and the date is a valid date
+    - Generate a ${role === 'sender' ? 'business professional' : 'student'} persona
+    - Make the names unique and realistic (not john doe or jane smith)
+    - Make the email unique by including random numbers and the current timestamp
+    - For email, use format: firstname.lastname.TIMESTAMP@example.com
+    - Use different cities for sender and receiver
+    
     Return only the JSON object, no additional text.`;
 
   try {
+    const timestamp = Date.now();
     const response = await fetch(`${OLLAMA_BASE_URL}/generate`, {
       method: 'POST',
       headers: {
@@ -31,13 +39,16 @@ export async function generateDummyUser(): Promise<User> {
     });
 
     const data = await response.json();
-    // Extract the JSON string from the response and parse it
     const jsonMatch = data.response.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response');
     }
     
     const userData: User = JSON.parse(jsonMatch[0]);
+    
+    // Ensure email is unique by adding timestamp
+    userData.email = `${userData.firstName.toLowerCase()}.${userData.lastName.toLowerCase()}.${timestamp}@example.com`;
+    
     return userData;
   } catch (error) {
     console.error('Error generating dummy user:', error);
