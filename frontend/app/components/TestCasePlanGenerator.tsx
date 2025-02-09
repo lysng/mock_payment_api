@@ -3,44 +3,105 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import TestCasePlan from "./TestCasePlan"
-import LogicTree from "./LogicTree"
-import ErrorCorrection from "./ErrorCorrection"
-import SyntheticDataGenerator from "./SyntheticDataGenerator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { generateTestCasePlan } from "@/lib/api"
+import { Loader2, Copy } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+
+interface TestCase {
+  title: string
+  scenarios: Array<{
+    description: string
+    expectedOutcome: string
+  }>
+}
+
+interface ImplementationStep {
+  step: string
+  details: string
+}
 
 export default function TestCasePlanGenerator() {
   const [requirement, setRequirement] = useState("")
-  const [product, setProduct] = useState("")
-  const [existingTestCases, setExistingTestCases] = useState("")
-  const [repoLink, setRepoLink] = useState("")
-  const [testCasePlan, setTestCasePlan] = useState("")
-  const [logicTree, setLogicTree] = useState<string[]>([])
+  const [testCasePlan, setTestCasePlan] = useState<TestCase[]>([])
+  const [implementationPlan, setImplementationPlan] = useState<ImplementationStep[]>([])
+  const [implementationPrompt, setImplementationPrompt] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
 
-  const generateTestCasePlan = async () => {
-    // This is where you would normally call your custom LLM API
-    // For this example, we'll use dummy data
-    setTestCasePlan(`
-      Test Case Plan for "${requirement}"
-      
-      1. Verify user can initiate a payment
-      2. Check if the payment amount is correctly processed
-      3. Ensure the recipient receives the correct amount
-      4. Validate transaction history is updated
-      5. Test error handling for insufficient funds
-    `)
-    setLogicTree([
-      "Analyze business requirement",
-      "Identify key components: user, payment, amount",
-      "Generate test cases for happy path",
-      "Add test cases for error scenarios",
-      "Review and finalize test case plan",
-    ])
+  const formatTestCases = (testCases: TestCase[]) => {
+    return testCases.map((testCase, index) => `
+Test Case ${index + 1}: ${testCase.title}
+${testCase.scenarios.map((scenario, sIndex) => `
+  Scenario ${sIndex + 1}:
+  Description: ${scenario.description}
+  Expected Outcome: ${scenario.expectedOutcome}
+`).join('')}
+`).join('\n')
+  }
+
+  const formatImplementationPlan = (plan: ImplementationStep[]) => {
+    return plan.map((step, index) => `
+Step ${index + 1}: ${step.step}
+Details: ${step.details}
+`).join('\n')
+  }
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({
+        title: "Copied to clipboard",
+        description: "You can now paste this prompt into Cursor or another LLM tool",
+      })
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please try selecting and copying the text manually",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const generatePlan = async () => {
+    if (!requirement.trim()) {
+      setError("Please enter a business requirement")
+      return
+    }
+
+    setIsLoading(true)
     setError(null)
+    setTestCasePlan([])
+    setImplementationPlan([])
+    setImplementationPrompt("")
+
+    try {
+      console.log('Sending request with requirement:', requirement)
+      const response = await generateTestCasePlan({
+        requirement,
+        context: "banking_api"
+      })
+
+      console.log('Received full response:', JSON.stringify(response, null, 2))
+      console.log('Implementation prompt:', response.implementationPrompt)
+      
+      setTestCasePlan(response.testCasePlan)
+      setImplementationPlan(response.implementationPlan)
+      setImplementationPrompt(response.implementationPrompt)
+    } catch (err) {
+      console.error('Error generating test cases:', err)
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("An unexpected error occurred. Please try again.")
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -54,59 +115,81 @@ export default function TestCasePlanGenerator() {
             <Label htmlFor="requirement">Business Requirement</Label>
             <Textarea
               id="requirement"
-              placeholder="Enter your business requirement here"
+              placeholder="Enter your business requirement here (e.g., 'As a user, I want to be able to set a savings goal...')"
               value={requirement}
               onChange={(e) => setRequirement(e.target.value)}
+              className="min-h-[100px]"
+              disabled={isLoading}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="product">Product</Label>
-            <Select onValueChange={setProduct}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a product" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="international-payments">International Payments</SelectItem>
-                <SelectItem value="mobile-app">Mobile App</SelectItem>
-                <SelectItem value="banking-website">Banking Website</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="existing-test-cases">Existing Test Cases (Optional)</Label>
-            <Textarea
-              id="existing-test-cases"
-              placeholder="Enter any existing test cases here"
-              value={existingTestCases}
-              onChange={(e) => setExistingTestCases(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="repo-link">Repository Link (Optional)</Label>
-            <Input
-              id="repo-link"
-              type="url"
-              placeholder="https://github.com/your-repo"
-              value={repoLink}
-              onChange={(e) => setRepoLink(e.target.value)}
-            />
-          </div>
-          <Button onClick={generateTestCasePlan}>Generate Test Case Plan</Button>
+          <Button 
+            onClick={generatePlan} 
+            disabled={isLoading || !requirement.trim()}
+            className="w-full"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              'Generate Plan'
+            )}
+          </Button>
         </CardContent>
       </Card>
-      {error && <div className="text-red-500">{error}</div>}
-      {testCasePlan && (
-        <>
-          <TestCasePlan plan={testCasePlan} />
-          <LogicTree steps={logicTree} />
-          <ErrorCorrection
-            onCorrect={(correctedInput) => {
-              setRequirement(correctedInput)
-              generateTestCasePlan()
-            }}
-          />
-          <SyntheticDataGenerator />
-        </>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {(testCasePlan.length > 0 || implementationPlan.length > 0 || implementationPrompt) && (
+        <Card>
+          <CardContent className="pt-6">
+            <Tabs defaultValue="test-cases">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="test-cases">Test Cases</TabsTrigger>
+                <TabsTrigger value="implementation">Implementation Plan</TabsTrigger>
+                <TabsTrigger value="prompt">Implementation Prompt</TabsTrigger>
+              </TabsList>
+              <TabsContent value="test-cases" className="mt-4">
+                <div className="whitespace-pre-wrap font-mono text-sm bg-slate-50 p-4 rounded-md">
+                  {testCasePlan.length > 0 ? formatTestCases(testCasePlan) : 'No test cases generated yet'}
+                </div>
+              </TabsContent>
+              <TabsContent value="implementation" className="mt-4">
+                <div className="whitespace-pre-wrap font-mono text-sm bg-slate-50 p-4 rounded-md">
+                  {implementationPlan.length > 0 ? formatImplementationPlan(implementationPlan) : 'No implementation plan generated yet'}
+                </div>
+              </TabsContent>
+              <TabsContent value="prompt" className="mt-4">
+                <div className="relative">
+                  {implementationPrompt && (
+                    <div className="absolute top-2 right-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => copyToClipboard(implementationPrompt)}
+                        title="Copy to clipboard"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="whitespace-pre-wrap font-mono text-sm bg-slate-50 p-4 rounded-md min-h-[200px] prose prose-sm max-w-none">
+                    {implementationPrompt ? implementationPrompt.split('\\n').map((line, i) => (
+                      <div key={i} className={line.startsWith('#') ? 'font-bold' : ''}>
+                        {line.replace(/^#+\s/, '')}
+                      </div>
+                    )) : 'No implementation prompt generated yet'}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

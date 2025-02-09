@@ -4,6 +4,7 @@ import { cors } from 'hono/cors';
 import { usersRouter } from './routes/users';
 import { accountsRouter } from './routes/accounts';
 import { paymentsRouter } from './routes/payments';
+import { testCaseGeneratorRouter } from './routes/testCaseGenerator';
 import YAML from 'yamljs';
 import path from 'path';
 
@@ -17,6 +18,7 @@ app.use('/*', cors());
 app.route('/api/v1/users', usersRouter);
 app.route('/api/v1/accounts', accountsRouter);
 app.route('/api/v1/payments', paymentsRouter);
+app.route('/api/v1', testCaseGeneratorRouter);
 
 // Swagger UI routes
 let swaggerDocument;
